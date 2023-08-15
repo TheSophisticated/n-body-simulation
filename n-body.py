@@ -20,9 +20,12 @@ r1_x = 10
 r1_y = 15
 r2_x = 30
 r2_y = 45
+rad = 50
+red = (255, 0, 0)
+blue = (0, 0, 255)
 
 #Setting timesteps
-TIME = timer()
+start = timer()
 current = time
 dt = 0.1 
 total_time = 10*60
@@ -46,14 +49,11 @@ def getDistanceAndForce(particle1, particle2):
 def getAccAndVel(particle, fx, fy):
     Ax = fx / particle.mass
     Ay = fy / particle.mass
-    time_step = timer()
-    Vx = u + (Ax * (time_step - TIME))
-    Vy = u + (Ax * (time_step - TIME))
+    Vx = u + (Ax * dt)
+    Vy = u + (Ax * dt)
 
-    rx = particle.posX + Vx * (time_step - TIME)
-    ry = particle.posY + Vy * (time_step - TIME)
-
-    TIME = time_step
+    rx = particle.posX + Vx * (dt)
+    ry = particle.posY + Vy * (dt)
 
     return rx, ry
 
@@ -64,18 +64,6 @@ body_1 = particle(m1, r1_x, r1_y)
 body_2 = particle(m2, r2_x, r2_y)
 
 bodies = [body_1, body_2]
-
-Fx = getDistanceAndForce(body_1, body_2)[0]
-Fy = getDistanceAndForce(body_1, body_2)[1]
-print(Fy)
-
-end = timer()
-
-for body in bodies:
-    while end != 600:
-        Rx = getAccAndVel(body, Fx, Fy)[0]
-        Ry = getAccAndVel(body, Fx, Fy)[1]
-        time.sleep(0.1)
 
 pygame.init()
 size = (1600,900)
@@ -88,6 +76,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     
-    pygame.display.flip()
+    end = timer()
+
+    while end != 180:
+        Fx = getDistanceAndForce(body_1,body_2)[0]
+        Fy = getDistanceAndForce(body_1,body_2)[1]
+        n = 0        
+        for body in bodies:
+            body.posX = getAccAndVel(body, Fx, Fy)[0]
+            body.posY = getAccAndVel(body, Fx, Fy)[1]
+
+                
+    
 
 pygame.quit()
