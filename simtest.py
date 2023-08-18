@@ -1,88 +1,67 @@
-import sys
 import pygame
-import numpy as np
+import sys
 
-# Constants (scaled down)
-G = 6.67430e-7  # Gravitational constant (m^3/kg/s^2) - Scaled down by a factor of 1e-4
-m1 = 1e5       # Mass of body 1 (kg) - Scaled down by a factor of 1e-5
-m2 = 1e5       # Mass of body 2 (kg) - Scaled down by a factor of 1e-5
+class Particle:
+    def __init__(self, mass, pos_x, pos_y, vel_x=0, vel_y=0):
+        self.mass = mass
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.vel_x = vel_x
+        self.vel_y = vel_y
 
-# Initial positions and velocities (scaled down)
-r1_init = np.array([-100, 0.0])  # Initial position of body 1 (pixels) - Scaled down by a factor of 1e-2
-r2_init = np.array([100, 0.0])   # Initial position of body 2 (pixels) - Scaled down by a factor of 1e-2
-v1_init = np.array([0.0, 2])     # Initial velocity of body 1 (pixels/s) - Scaled down by a factor of 1e-1
-v2_init = np.array([0.0, -2])    # Initial velocity of body 2 (pixels/s) - Scaled down by a factor of 1e-1
+G = 1
+dt = 0.05  # Smaller time step for more accurate simulation
 
-# Time step and total time
-dt = 0.01  # Time step (seconds) - Reduced to 0.01 seconds for better accuracy
-total_time = 60*60  # Total time to simulate (seconds) - 1 hour
+def calculate_force(particle1, particle2):
+    rx = particle2.pos_x - particle1.pos_x
+    ry = particle2.pos_y - particle1.pos_y
+    r_squared = rx ** 2 + ry ** 2
+    r = r_squared ** 0.5
+    
+    force = (G * particle1.mass * particle2.mass) / r_squared
+    force_x = force * rx / r
+    force_y = force * ry / r
+    
+    return force_x, force_y
+
+def update_particle(particle, force_x, force_y):
+    acceleration_x = force_x / particle.mass
+    acceleration_y = force_y / particle.mass
+    
+    particle.vel_x += acceleration_x * dt
+    particle.vel_y += acceleration_y * dt
+    
+    particle.pos_x += particle.vel_x * dt
+    particle.pos_y += particle.vel_y * dt
 
 pygame.init()
+size = (800, 600)
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption("N-Body Simulation")
 
-# Window dimensions
-win_width, win_height = 800, 600
-win = pygame.display.set_mode((win_width, win_height))
-pygame.display.set_caption("2-Body Simulation using Pygame")
+red = (255, 0, 0)
+blue = (0, 0, 255)
+radius = 20
 
-# Colors
-white = (255, 255, 255)
-black = (0, 0, 0)
+particle_1 = Particle(mass=100, pos_x=300, pos_y=300, vel_x=0.5, vel_y=0.3)
+particle_2 = Particle(mass=200, pos_x=500, pos_y=300, vel_x=-0.5, vel_y=-0.3)
 
-# Function to calculate the gravitational force between two bodies
-def gravitational_force(r1, r2, m1, m2):
-    r12 = r2 - r1
-    dist = np.linalg.norm(r12)
-    direction = r12 / dist
-    force_magnitude = (G * m1 * m2) / (dist**2)
-    force = direction * force_magnitude
-    return force
-
-# Function to update positions and velocities using Euler's method
-def update_positions_and_velocities(r1, r2, v1, v2, m1, m2, dt):
-    force = gravitational_force(r1, r2, m1, m2)
-    a1 = force / m1
-    a2 = -force / m2
-
-    v1 += a1 * dt
-    v2 += a2 * dt
-
-    r1 += v1 * dt
-    r2 += v2 * dt
-
-    return r1, r2, v1, v2
-
-# Scaling factor for visualization
-scale_factor = 100
-
-# Initial positions
-r1_init *= scale_factor
-r2_init *= scale_factor
-
-# Simulation loop
-t = 0
-clock = pygame.time.Clock()
-while t <= total_time:
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
-    r1_init, r2_init, v1_init, v2_init = update_positions_and_velocities(
-        r1_init, r2_init, v1_init, v2_init, m1, m2, dt
-    )
-
-    win.fill(black)
-
-    # Draw bodies (scaled up for visualization)
-    body1_pos = (int(win_width / 2 + r1_init[0]), int(win_height / 2 + r1_init[1]))
-    body2_pos = (int(win_width / 2 + r2_init[0]), int(win_height / 2 + r2_init[1]))
-    pygame.draw.circle(win, white, body1_pos, 10)
-    pygame.draw.circle(win, white, body2_pos, 10)
-
-    # Update the screen
+    screen.fill((0, 0, 0))
+    
+    pygame.draw.circle(screen, red, (int(particle_1.pos_x), int(particle_1.pos_y)), radius)
+    pygame.draw.circle(screen, blue, (int(particle_2.pos_x), int(particle_2.pos_y)), radius)
+    
+    force_x, force_y = calculate_force(particle_1, particle_2)
+    update_particle(particle_1, force_x, force_y)
+    update_particle(particle_2, -force_x, -force_y)
+    
     pygame.display.flip()
-    clock.tick(60)
-
-    t += dt
+    pygame.time.delay(0)
 
 pygame.quit()

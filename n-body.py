@@ -1,8 +1,7 @@
 import pygame
-import numpy as np
-import matplotlib
 from timeit import default_timer as timer
 import time
+import sys
 
 #Creating the Particle CLass
 class particle:
@@ -16,10 +15,10 @@ G = 1
 u = 0
 m1 = 100
 m2 = 200
-r1_x = 10
-r1_y = 15
-r2_x = 30
-r2_y = 45
+r1_x = 1000
+r1_y = 1500
+r2_x = 0
+r2_y = 0
 rad = 50
 red = (255, 0, 0)
 blue = (0, 0, 255)
@@ -35,7 +34,10 @@ def getDistanceAndForce(particle1, particle2):
     #Getting Distance and Related Angles
     rx = particle1.posX - particle2.posX
     ry = particle1.posY - particle2.posY
+    print(rx, ry)
     r = ((rx**2) + (ry**2))**(1/2)
+    if r == 0:
+        print("R is 0")
     cos = rx/r
     sin = ry/r
 
@@ -75,18 +77,24 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+            pygame.quit()
+            sys.exit()
+    pygame.draw.circle(screen, red, (body_1.posX, body_1.posY), rad)
+    pygame.draw.circle(screen, blue, (body_2.posX, body_2.posY), rad)
+    Fx = getDistanceAndForce(body_1,body_2)[0]
+    Fy = getDistanceAndForce(body_1,body_2)[1]      
+    print(Fx,Fy)
+    #Body - 1:
+    body_1.posX = getAccAndVel(body_1, Fx, Fy)[0]
+    body_1.posY = getAccAndVel(body_1, Fx, Fy)[1]
+
+    #Body - 2
+    body_2.posX = getAccAndVel(body_1, Fx, Fy)[0]
+    body_2.posY = getAccAndVel(body_1, Fx, Fy)[1]
+
     
-    end = timer()
-
-    while end != 180:
-        Fx = getDistanceAndForce(body_1,body_2)[0]
-        Fy = getDistanceAndForce(body_1,body_2)[1]
-        n = 0        
-        for body in bodies:
-            body.posX = getAccAndVel(body, Fx, Fy)[0]
-            body.posY = getAccAndVel(body, Fx, Fy)[1]
-
+       
+pygame.quit() 
                 
     
 
-pygame.quit()
